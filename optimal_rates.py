@@ -3,13 +3,14 @@ from scipy.integrate import simps
 import numpy as np
 
 
-def find_optimal_rate(n,u,mu,rs):
+def find_optimal_rate(n,u,mu,rs,alpha=1):
 	# Input:
 	#
 	# n 	: code length
 	# u 	: security level
 	# mu	: straggling parameter
-	# rs	: dimension of A  
+	# rs	: dimension of A
+	# alpha : time scaling  
 	#
 	# Output (k,Topt):
 	# k 	: code dimension (k/n is optimal coderate)
@@ -23,7 +24,7 @@ def find_optimal_rate(n,u,mu,rs):
 
 	# Define a function for the integrand
 	def expected_value_function(t,k):
-		return t*(k-u)*pdf_q_order_statistic_in_group((k-u)*t,k,n,mu)				# Integrand is t*pdf(t), where t -> (k-u)*t
+		return t*alpha*(k-u)*pdf_q_order_statistic_in_group((k-u)*t*alpha,k,n,mu)				# Integrand is t*pdf(t), where t -> (k-u)*t
 
 
 	for k in range(u+1,n):		# For all k in the range of u < k < n
