@@ -20,25 +20,25 @@ def find_grouping(N,u,mu,rs):
 	qOverall = [0]*len(div)
 	for n in div:
 		K = N/n 	# Number of workers per group
-		q, dummy = find_optimal_rate(K,0,mu,rs,n)	# Numer of servers to wait for in group
+		
 
 
 
 
-		T = [0]*(n-u-1)				# Allocate memory
-
-
-		# Define a function for the integrand
-		def expected_value_function(t,k):
-			return t*(k-u)*pdf_overall(t*(k-u),n,k,K,q,mu)				# Integrand is t*pdf(t), where t -> (k-u)*t
+		T = [0]*(n-u)				# Allocate memory
 
 
 		for k in range(u+1,n+1):		# For all k in the range of u < k <= n
-			t = np.linspace(1./(k-u), k*(n-k+10)*5./((k-u)*n*mu*(n-k+1))+1./(k-u),200)	# Define 200 evaluation points where the integrand is not zero 
-			T[k-u-1] = simps(expected_value_function(t,k),t)*(1 + ((n**2*(n-k-1)*(k-u))/(rs*k)))	# Integrate over expected_value_function + decoding time
-		
+			delay = 1/(k-u)
+			q, dummy = find_optimal_rate(K,0,mu*(k-u),rs/(k-u),delay)	# Numer of servers to wait for in group
+			t = np.linspace(delay,delay + 7*q/(K*mu*(k-u)),200)	# Define 200 evaluation points where the integrand is not zero
+			pdfEval = [0]*(t.size-1)
+			for i in range(1,t.size):
+				pdfEval[i-1] = t[i]*pdf_overall(t[i],n,k,K,q,mu*(k-u),delay)
+			T[k-u-1] = simps(pdfEval,t[1:])*(1 + ((n**2*(n-k-1)*(k-u))/(rs*k)))	# Integrate over expected_value_function + decoding time
 		Topt = min(T)				# Optimal expected waiting time
-		k = T.index(Topt) + u + 1	# Code dimension corresponding to Topt 
+		k = T.index(Topt) + u + 1	# Code dimension corresponding to Topt
+		print(Topt,k,n)
 
 
 	return

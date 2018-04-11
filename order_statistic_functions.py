@@ -1,6 +1,7 @@
 import math
+import numpy as np
 from scipy.special import comb
-from scipy.integrate import quad
+from scipy.integrate import simps
 
 def pdf_runtime_worker(t,mu,delay=1):
 	# Input:
@@ -52,8 +53,8 @@ def cdf_q_order_statistic_in_group(t,q,K,mu,delay=1):
 	# Output:
 	#
 	# cdf of the qth fastest worker out of K workers in one group
-	cdf, precision = quad(pdf_q_order_statistic_in_group,delay,t,args=(q,K,mu,delay))
-	return cdf
+	tau = np.linspace(delay,t,200)
+	return simps(pdf_q_order_statistic_in_group(tau,q,K,mu,delay),tau)
 
 def pdf_overall(t,n,k,K,q,mu,delay=1):
 	return n*comb(n-1,k-1)*cdf_q_order_statistic_in_group(t,q,K,mu,delay)**(k-1)*(1-cdf_q_order_statistic_in_group(t,q,K,mu,delay))**(n-k)*pdf_q_order_statistic_in_group(t,q,K,mu,delay)

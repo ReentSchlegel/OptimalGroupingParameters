@@ -3,7 +3,7 @@ from scipy.integrate import simps
 import numpy as np
 
 
-def find_optimal_rate(n,u,mu,rs,alpha=1):
+def find_optimal_rate(n,u,mu,rs,delay = 1):
 	# Input:
 	#
 	# n 	: code length
@@ -19,15 +19,15 @@ def find_optimal_rate(n,u,mu,rs,alpha=1):
 	u = int(u)					# Change data type
 	n = int(n)					# Change data type
 	
-	T = [0]*(n-u-1)				# Allocate memory
+	T = [0]*(n-u)				# Allocate memory
 
 
 	# Define a function for the integrand
 	def expected_value_function(t,k):
-		return t*alpha*(k-u)*pdf_q_order_statistic_in_group((k-u)*t*alpha,k,n,mu)				# Integrand is t*pdf(t), where t -> (k-u)*t
+		return t*pdf_q_order_statistic_in_group(t,k,n,mu*(k-u),delay/(k-u))			# Integrand is t*pdf(t)
 
 
-	for k in range(u+1,n):		# For all k in the range of u < k < n
+	for k in range(u+1,n+1):	# For all k in the range of u < k <= n
 		t = np.linspace(1./(k-u), k*(n-k+10)*5./((k-u)*n*mu*(n-k+1))+1./(k-u),200)	# Define 200 evaluation points where the integrand is not zero 
 		T[k-u-1] = simps(expected_value_function(t,k),t)*(1 + ((n**2*(n-k-1)*(k-u))/(rs*k)))	# Integrate over expected_value_function + decoding time
 	
