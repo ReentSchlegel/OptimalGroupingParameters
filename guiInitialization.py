@@ -1,13 +1,11 @@
 from appJar import gui
+from grouping import find_grouping
 
 N = 100 
 u = 3
 mu = 1.0
 rs = 200000*100
 
-n = 10
-k = 7
-q = 7
 
 
 def press():
@@ -20,14 +18,17 @@ def press():
     	app.infoBox("Invalid Input","Note that the number of servers and the number of entires in A must be a positive integer, the \
 	number of colluding services must be a non negative integer and the straggling paramter must be a positive number")
     else:
+        n, k, q, T = find_grouping(N,u,mu,rs)
         app.setLabel("lq", "(" + str(int(N/n)) + "," + str(q) + ")")
         app.setLabel("lk", str(k))
         app.setLabel("ln", str(n))
-        print(N,u,mu)
+        app.setLabel("lT", str(T))
+
+        
     
 
 
-app = gui("Code Parameter Optimization", "600x600", bg='green', font={'size':18})
+app = gui("Code Parameter Optimization", "700x700", bg='green', font={'size':18})
 app.startLabelFrame("Input Arguments")
 app.addLabel("l1","Number of servers",1,0)
 app.addNumericEntry("Nos",1,1)
@@ -52,6 +53,8 @@ app.addLabel("l6","Service providers to wait for:",6,0)
 app.addLabel("lk","",6,1)
 app.addLabel("l7","Code dimension at the service providers:",7,0)
 app.addLabel("lq","",7,1)
+app.addLabel("l8","Expected waiting time:",8,0)
+app.addLabel("lT","",8,1)
 app.stopLabelFrame()
 
 app.go()

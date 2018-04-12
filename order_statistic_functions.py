@@ -39,6 +39,8 @@ def pdf_q_order_statistic_in_group(t,q,K,mu,delay=1):
 	# Output:
 	#
 	# pdf of the qth fastest worker out of K workers in one group
+	mu *= q
+	delay /= q
 	return K*comb(K-1,q-1)*cdf_runtime_worker(t,mu,delay)**(q-1)*(1-cdf_runtime_worker(t,mu,delay))**(K-q)*pdf_runtime_worker(t,mu,delay)
 
 def cdf_q_order_statistic_in_group(t,q,K,mu,delay=1):
