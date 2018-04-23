@@ -57,7 +57,7 @@ def cdf_q_order_statistic_in_group(t,q,K,mu,delay=1):
 	Output:
 	
 	cdf of the runtime of the qth fastest worker out of K workers in one group'''
-	tau = np.linspace(delay,t,200)
+	tau = np.linspace(delay/q,t,200)
 	return simps(pdf_q_order_statistic_in_group(tau,q,K,mu,delay),tau)
 
 def pdf_overall(t,n,k,K,q,mu,delay=1):

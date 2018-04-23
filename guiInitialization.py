@@ -26,7 +26,7 @@ def press():
 	number of colluding services must be a non negative integer and the straggling paramter and delay must be a positive number")
     
     else:   # Input is valid
-        n, k, q, T = find_grouping(N,u,mu,delay,rs)     # Compute optimal grouping
+        n, k, q, T = find_grouping(N,u,mu,delay,rs,app)	# Compute optimal grouping
 
         # Write output
         app.setLabel("lq", "(" + str(int(N/n)) + "," + str(q) + ")")
@@ -61,6 +61,10 @@ app.stopLabelFrame()
 
 # Buttons
 app.addButtons(["Submit", "Cancel"], [press, app.stop],1)   # Add two buttons. Call "Press" when "Submit" is pressed and stop the app when "Cancel" is pressed
+
+# Progress meter
+app.addMeter("Progress",2)								# Add a progress meter
+app.setMeterFill("Progress", "blue")
 
 # Output 
 app.startLabelFrame("Output")                           # Frame the outputs

@@ -2,6 +2,7 @@ import numpy as np
 from optimal_rates import find_optimal_rate
 from order_statistic_functions import pdf_overall
 from scipy.integrate import simps
+from scipy.integrate import quad
 
 
 def find_divisors(n):
@@ -26,7 +27,7 @@ def find_divisors(n):
 
 	return out 						# Return the list
 
-def find_grouping(N,u,mu,delay,rs):
+def find_grouping(N,u,mu,delay,rs,app):
 	'''Find the optimal grouping scheme
 	
 	Input:
@@ -44,6 +45,8 @@ def find_grouping(N,u,mu,delay,rs):
 	q 	: code dimension in the groups
 	T 	: expected runtime'''
 
+	app.setMeter("Progress",0)			# Initialize progress meter
+
 	# Type conversion
 	u = int(u)
 	N = int(N)
@@ -53,10 +56,17 @@ def find_grouping(N,u,mu,delay,rs):
 	kopt = []
 	qOverall = []
 
+	# Obtain numbers of groups
 	div = np.array(find_divisors(N))	# Find the divisors of N (possible numbers of groups)
 	div = div[u<div]					# Keep feasible number of groups (those that are more than u)
 	
+	# Calculate the total number of loops for progress update
+	totalLoops = 0		# Initialize total number of loops
+	loop = 0			# Initialize loop counter
+	for n in div:		# For all numbers of groups n
+		totalLoops += n-u	# n-u loops have to be evaluated
 
+	# Search for optimum
 	for n in div:		# For all numbers of groups
 		K = N/n 		# Number of workers per group
 		
@@ -67,22 +77,24 @@ def find_grouping(N,u,mu,delay,rs):
 
 		for k in range(u+1,n+1):		# For all code dimensions over the groups
 			q[k-u-1] = find_optimal_rate(K,mu*(k-u),rs*1./(k-u),delay*1./(k-u))	# Numer of servers to wait for in group
-			t = np.linspace(delay*1./(k-u),delay*1./(k-u) + q[k-u-1]*7./(K*mu*(k-u)),200)		# Define 200 evaluation points where the integrand is not zero
-			pdfEval = [0]*t.size
-			for i in range(1,t.size):
-				pdfEval[i] = t[i]*pdf_overall(t[i],n,k,K,q[k-u-1],mu*(k-u),delay*1./(k-u))
-			if k == n:
-				T[k-u-1] = simps(pdfEval,t)
-			else:
-				#T[k-u-1] = simps(pdfEval,t)*(1 + ((n**2*(n-k-1)*(k-u))/(rs*k)))	# Integrate over expected_value_function + decoding time
-				T[k-u-1] = simps(pdfEval,t)
-		Topt += [min(T)]				# Optimal expected waiting time
-		kopt += [T.index(Topt[-1]) + u + 1]	# Code dimension corresponding to Topt
-		qOverall += [q[T.index(Topt[-1])]]
-	ToptOverall = min(Topt)
-	koptOverall = kopt[Topt.index(ToptOverall)]
-	qopt = qOverall[Topt.index(ToptOverall)]
-	nopt = div[Topt.index(ToptOverall)]
+			# Expected waiting time and accuracy
+			T[k-u-1], dummy = quad(lambda t: t*pdf_overall(t,n,k,K,q[k-u-1],mu*(k-u),delay*1./(k-u)),delay/(q[k-u-1]*(k-u)),np.inf)
+			if k < n: 	# Decoding is needed (No decoding for k == n)
+				T[k-u-1] *= (1 + ((n**2*(n-k-1)*(k-u))/(rs*k)))	# Add decoding time
+			
+			loop += 1 	# Update loop counter
+			app.setMeter("Progress",100*loop/totalLoops)	# Update progress meter
+
+			
+		Topt += [min(T)]					# local optimal expected waiting time
+		kopt += [T.index(Topt[-1]) + u + 1]	# Code dimension over groups corresponding to Topt
+		qOverall += [q[T.index(Topt[-1])]]	# Code dimension in groups corresponding to Topt
+	ToptOverall = min(Topt)						# Global optimal expected waiting time
+	koptOverall = kopt[Topt.index(ToptOverall)]	# Corresponding code dimension over groups
+	qopt = qOverall[Topt.index(ToptOverall)]	# Corresponding code dimension in groups
+	nopt = div[Topt.index(ToptOverall)]			# Corresponding code length over groups
+
+	
 
 
 	return nopt, koptOverall, qopt, ToptOverall
