@@ -27,7 +27,7 @@ def find_divisors(n):
 
 	return out 						# Return the list
 
-def find_grouping(N,u,mu,delay,rs,app):
+def find_grouping(N,u,mu,delay,r,s,p,app):
 	'''Find the optimal grouping scheme
 	
 	Input:
@@ -36,7 +36,10 @@ def find_grouping(N,u,mu,delay,rs,app):
 	u 		: number of colluding service providers
 	mu 		: straggling parameter of one worker performing the whole task
 	delay	: delay of one worker performing the whole task
-	rs 		: number of entries in A
+	r 		: number of rows in A
+	s 		: number of columns in A
+	p 		: number of bits per number (2^p is the field size)
+	app		: application object
 	
 	Output (n,k,q,t):
 	
@@ -44,8 +47,6 @@ def find_grouping(N,u,mu,delay,rs,app):
 	k 	: code dimension over the groups
 	q 	: code dimension in the groups
 	T 	: expected runtime'''
-
-	app.setMeter("Progress",0)			# Initialize progress meter
 
 	# Type conversion
 	u = int(u)
@@ -76,11 +77,11 @@ def find_grouping(N,u,mu,delay,rs,app):
 
 
 		for k in range(u+1,n+1):		# For all code dimensions over the groups
-			q[k-u-1] = find_optimal_rate(K,mu*(k-u),rs*1./(k-u),delay*1./(k-u))	# Numer of servers to wait for in group
+			q[k-u-1] = find_optimal_rate(K,mu*(k-u),r*1./(k-u),s,p,delay*1./(k-u))			# Numer of servers to wait for in group
 			# Expected waiting time and accuracy
 			T[k-u-1], dummy = quad(lambda t: t*pdf_overall(t,n,k,K,q[k-u-1],mu*(k-u),delay*1./(k-u)),delay/(q[k-u-1]*(k-u)),np.inf)
 			if k < n: 	# Decoding is needed (No decoding for k == n)
-				T[k-u-1] *= (1 + ((n**2*(n-k-1)*(k-u))/(rs*k)))	# Add decoding time
+				T[k-u-1] += n*((n-k-1)*np.log(p)+n-k)*(delay+1/mu)*(k-u)/(r*k*(s*np.log(p)+s-1))	# Add decoding time
 			
 			loop += 1 	# Update loop counter
 			app.setMeter("Progress",100*loop/totalLoops)	# Update progress meter

@@ -4,9 +4,11 @@ from grouping import find_grouping
 # Default values
 N = 100             # Number of workers
 u = 3               # Number of compromised service provieders
-mu = 0.1          # Straggling parameter of one worker performing the whole task
+mu = 0.1          	# Straggling parameter of one worker performing the whole task
 delay = 10          # Delay of one worker performing the whole task
-rs = 200000*100     # Number of entries in A
+r = 2000000     	# Number of rows in A
+s = 100 			# Number of columns in A
+p = 8 				# Number of bits per number (2^p is the field size)
 
 
 
@@ -17,16 +19,26 @@ def press():
     u = app.entry("Csp")
     mu = app.entry("Sp")
     delay = app.entry("Del")
-    rs = app.entry("NoeiA")
+    r = app.entry("NoriA")
+    s = app.entry("NociA")
+    p = app.entry("Nob")
+
+    # Reset the outputs
+    app.setLabel("lq", [])
+    app.setLabel("lk", [])
+    app.setLabel("ln", [])
+    app.setLabel("lT", [])
+
+    # Initialize progress meter
+    app.setMeter("Progress",0)
 
     # Catch invalid inputs
-    if N < 1 or u < 0 or mu <= 0 or delay <=0 or rs < 1 or (N % 1) != 0 or (u % 1) != 0 or (rs % 1) != 0:
+    if N < 1 or u < 0 or mu <= 0 or delay <=0 or r < 1 or s < 1 or p < 1 or (N % 1) != 0 or (u % 1) != 0 or (r % 1) != 0 or (s % 1) != 0 or (p % 1) != 0:
     	
-        app.infoBox("Invalid Input","Note that the number of servers and the number of entires in A must be a positive integer, the \
-	number of colluding services must be a non negative integer and the straggling paramter and delay must be a positive number")
+        app.infoBox("Invalid Input","Note that the number of servers, the number of rows and columns in A and the number of bits per number must be positive integers, the number of colluding services must be a non negative integer and the straggling paramter and delay must be a positive number")
     
     else:   # Input is valid
-        n, k, q, T = find_grouping(N,u,mu,delay,rs,app)	# Compute optimal grouping
+        n, k, q, T = find_grouping(N,u,mu,delay,r,s,p,app)	# Compute optimal grouping
 
         # Write output
         app.setLabel("lq", "(" + str(int(N/n)) + "," + str(q) + ")")
@@ -54,9 +66,15 @@ app.setEntry("Sp", mu)                                  # Set default value of m
 app.addLabel("l4","Delay",4,0)                          # Label for delay
 app.addNumericEntry("Del",4,1)                          # Input box for delay
 app.setEntry("Del", delay)                              # Set default value of delay
-app.addLabel("l5","Number of entries in A",5,0)         # Label for rs
-app.addNumericEntry("NoeiA",5,1)                        # Input box for rs
-app.setEntry("NoeiA", rs)                               # Set default value of rs
+app.addLabel("l5","Number of rows in A",5,0)         	# Label for r
+app.addNumericEntry("NoriA",5,1)                        # Input box for r
+app.setEntry("NoriA", r)                               	# Set default value of r
+app.addLabel("l6","Number of columns in A",6,0)         # Label for s
+app.addNumericEntry("NociA",6,1)                        # Input box for s
+app.setEntry("NociA", s)                               	# Set default value of s
+app.addLabel("l7","Number of bits per number",7,0)      # Label for p
+app.addNumericEntry("Nob",7,1)                        	# Input box for p
+app.setEntry("Nob", str(p))                             # Set default value of p
 app.stopLabelFrame()
 
 # Buttons
@@ -68,13 +86,13 @@ app.setMeterFill("Progress", "blue")
 
 # Output 
 app.startLabelFrame("Output")                           # Frame the outputs
-app.addLabel("l6","Number of service providers:",0,0)   # Label for n
+app.addLabel("l8","Number of service providers:",0,0)   # Label for n
 app.addLabel("ln","",0,1)                               # Textbox for n
-app.addLabel("l7","Service providers to wait for:",1,0) # Label for k
+app.addLabel("l9","Service providers to wait for:",1,0) # Label for k
 app.addLabel("lk","",1,1)                               # Textbox for k
-app.addLabel("l8","Code dimension at the service providers:",2,0)   # Label for q
+app.addLabel("l10","Code dimension at the service providers:",2,0)	# Label for q
 app.addLabel("lq","",2,1)                               # Textbox for q
-app.addLabel("l9","Expected waiting time:",3,0)         # Label for T
+app.addLabel("l11","Expected waiting time:",3,0)        # Label for T
 app.addLabel("lT","",3,1)                               # Textbox for T
 app.stopLabelFrame()
 
