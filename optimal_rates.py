@@ -1,38 +1,34 @@
 from order_statistic_functions import pdf_q_order_statistic_in_group
-from scipy.integrate import simps
+from scipy.integrate import quad
 import numpy as np
 
 
-def find_optimal_rate(n,u,mu,rs,delay = 1):
-	# Input:
-	#
-	# n 	: code length
-	# u 	: security level
-	# mu	: straggling parameter
-	# rs	: dimension of A
-	# alpha : time scaling  
-	#
-	# Output (k,Topt):
-	# k 	: code dimension (k/n is optimal coderate)
-	# Topt	: optimal expected waiting time
-
-	u = int(u)					# Change data type
-	n = int(n)					# Change data type
+def find_optimal_rate(K,mu,r,s,p,delay = 1):
+	'''Input:
 	
-	T = [0]*(n-u)				# Allocate memory
-
-
-	# Define a function for the integrand
-	def expected_value_function(t,k):
-		return t*pdf_q_order_statistic_in_group(t,k,n,mu*(k-u),delay/(k-u))			# Integrand is t*pdf(t)
-
-
-	for k in range(u+1,n+1):	# For all k in the range of u < k <= n
-		t = np.linspace(1./(k-u), k*(n-k+10)*5./((k-u)*n*mu*(n-k+1))+1./(k-u),200)	# Define 200 evaluation points where the integrand is not zero 
-		T[k-u-1] = simps(expected_value_function(t,k),t)*(1 + ((n**2*(n-k-1)*(k-u))/(rs*k)))	# Integrate over expected_value_function + decoding time
+	K 		: code length (number of workers in the grpup)
+	mu		: straggling parameter of one worker performing the whole task for the group
+	r		: number of rows in Matrix assigned to group
+	s		: number of columns in Matrix assigned to group
+	p 		: number of bits per number (2^p is the field size)
+	delay	: delay of one worker performing the whole task assigned to the group  
 	
-	Topt = min(T)				# Optimal expected waiting time
-	k = T.index(Topt) + u + 1	# Code dimension corresponding to Topt 
-	return (k,Topt)
+	Output:
+	code dimension q (q/K is optimal code rate)'''
+
+	K = int(K)					# Change data type
+	
+	T = [np.inf]*K				# Allocate memory
+
+
+	for q in range(1,K+1):	# For all q in the range of 0 < q <= K
+		# Integrate over expected_value_function (t*pdf(t))
+		T[q-1], dummy = quad(lambda t: t*pdf_q_order_statistic_in_group(t,q,K,mu,delay),delay/q,np.inf)
+		if q < K:			# With decoding (no decoding for q == K)
+			T[q-1] += K*((K-q-1)*np.log(p)+K-q)*(delay+1/mu)/(r*(s*np.log(p)+s-1))	# Add decoding time
+
+	Topt = min(T)			# Optimal expected waiting time
+	q = T.index(Topt) + 1	# Code dimension corresponding to Topt 
+	return q 				# Return optimal code dimension
 
 
