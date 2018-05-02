@@ -1,4 +1,5 @@
 import numpy as np
+import pickle
 from optimal_rates import find_optimal_rate
 from order_statistic_functions import pdf_overall
 from scipy.integrate import simps
@@ -27,7 +28,7 @@ def find_divisors(n):
 
 	return out 						# Return the list
 
-def find_grouping(N,u,mu,delay,r,s,p,app):
+def find_grouping(N,u,mu,delay,r,s,p,app=0,SAVE=0):
 	'''Find the optimal grouping scheme
 	
 	Input:
@@ -39,7 +40,8 @@ def find_grouping(N,u,mu,delay,r,s,p,app):
 	r 		: number of rows in A
 	s 		: number of columns in A
 	p 		: number of bits per number (2^p is the field size)
-	app		: application object
+	app		: application object (optional)
+	SAVE	: flag if T shall be saved for different groupings
 	
 	Output (n,k,q,t):
 	
@@ -79,12 +81,13 @@ def find_grouping(N,u,mu,delay,r,s,p,app):
 		for k in range(u+1,n+1):		# For all code dimensions over the groups
 			q[k-u-1] = find_optimal_rate(K,mu*(k-u),r*1./(k-u),s,p,delay*1./(k-u))			# Numer of servers to wait for in group
 			# Expected waiting time and accuracy
-			T[k-u-1], dummy = quad(lambda t: t*pdf_overall(t,n,k,K,q[k-u-1],mu*(k-u),delay*1./(k-u)),delay/(q[k-u-1]*(k-u)),np.inf)
+			T[k-u-1], dummy = quad(lambda t: t*pdf_overall(t,n,k,K,q[k-u-1],mu*(k-u),delay*1./(k-u)),delay/(q[k-u-1]*(k-u)),10*(delay/(q[k-u-1]*(k-u)) + 1/((k-u)*q[k-u-1]*mu)))
 			if k < n: 	# Decoding is needed (No decoding for k == n)
 				T[k-u-1] += n*((n-k-1)*np.log(p)+n-k)*(delay+1/mu)*(k-u)/(r*k*(s*np.log(p)+s-1))	# Add decoding time
 			
 			loop += 1 	# Update loop counter
-			app.setMeter("Progress",100*loop/totalLoops)	# Update progress meter
+			if app:
+				app.setMeter("Progress",100*loop/totalLoops)	# Update progress meter
 
 			
 		Topt += [min(T)]					# local optimal expected waiting time
@@ -95,7 +98,9 @@ def find_grouping(N,u,mu,delay,r,s,p,app):
 	qopt = qOverall[Topt.index(ToptOverall)]	# Corresponding code dimension in groups
 	nopt = div[Topt.index(ToptOverall)]			# Corresponding code length over groups
 
+	if SAVE:
+		with open((str(N) + '.pckl'),'wb') as f:
+			pickle.dump([Topt, div],f)
 	
-
 
 	return nopt, koptOverall, qopt, ToptOverall

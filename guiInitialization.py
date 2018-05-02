@@ -4,11 +4,11 @@ from grouping import find_grouping
 # Default values
 N = 100             # Number of workers
 u = 3               # Number of compromised service provieders
-mu = 0.1          	# Straggling parameter of one worker performing the whole task
-delay = 10          # Delay of one worker performing the whole task
+mu = 0.001          # Straggling parameter of one worker performing the whole task
+delay = 1000        # Delay of one worker performing the whole task
 r = 2000000     	# Number of rows in A
-s = 100 			# Number of columns in A
-p = 8 				# Number of bits per number (2^p is the field size)
+s = 128 			# Number of columns in A
+p = 32 				# Number of bits per number (2^p is the field size)
 
 
 
@@ -50,7 +50,7 @@ def press():
     
 
 
-app = gui("Code Parameter Optimization", "1400x1000", bg='green', font={'size':18}) # Open a new gui called app
+app = gui("Code Parameter Optimization", "1400x1400", bg='green', font={'size':18}) # Open a new gui called app
 
 # Inputs
 app.startLabelFrame("Input Arguments")                  # Frame the inputs
